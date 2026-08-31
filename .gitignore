@@ -13,4 +13,3 @@ donnees/sauvegardes/
 *.log
 *.jsonl
 .DS_Store
-apercus/*.png
