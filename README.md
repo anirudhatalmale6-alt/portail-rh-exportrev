@@ -54,7 +54,7 @@ ensemble annule tout l'interet du chiffrement.
 3. Relancer `php outils/installer.php` (rejouable sans risque).
 4. `php outils/purge-demo.php --executer`, puis `'mode_demo' => false`.
 
-**Les 149 controles ont tourne sur SQLite.** Je n'ai pas d'instance MySQL
+**Les 151 controles ont tourne sur SQLite.** Je n'ai pas d'instance MySQL
 sur ma machine. Donne-m'en une et je relance la suite dessus avant de
 declarer quoi que ce soit sur ce chemin.
 
@@ -223,7 +223,7 @@ Chaque valeur laissee vide s'affiche comme une pastille ambre
 ## 7. Recette
 
 ```bash
-python3 tests/tests-rh.py        # 149 controles
+python3 tests/tests-rh.py        # 151 controles
 python3 tests/captures.py        # 47 captures + console + debordement
 php tests/rh.php compte          # etat de la base
 php tests/rh.php slugs           # les adresses respectent [a-z0-9-]
@@ -241,6 +241,7 @@ un lien d'examen deja utilise, elle revoque une permission en base.
 |---|---|
 | Retirer la garde de coherence dans `publier_bulletin()` | 2 controles rouges |
 | Cesser de relire `publie_le <= maintenant` sur les actualites | 3 controles rouges |
+| Ne plus renseigner l'acteur de l'audit a la connexion | 1 controle rouge |
 
 Les deux ont ete restaurees et le vert reconfirme. La deuxieme a au passage
 montre que `recherche_globale()` porte sa **propre** verification de date :
@@ -267,6 +268,15 @@ ressemblait a un bug de mot de passe. Corrige : on ne compte que les
 **echecs**, avec deux compteurs distincts, et une connexion reussie remet le
 compteur du compte a zero.
 
+**Le journal d'audit ne savait pas qui s'etait connecte.** La colonne
+« qui » disait « systeme » sur toutes les connexions reussies : a la
+connexion, le cookie de session vient d'etre pose et `$_COOKIE` n'est pas
+repeuple dans la meme requete, donc `utilisateur()` rendait null. La ligne
+la plus utile d'un journal de connexions ne servait a rien. Vu sur une
+**capture d'ecran** du journal, pas dans le code — la lecture du code
+n'aurait rien montre d'anormal. Un controle a ete ajoute, et il passe au
+rouge quand on retire le correctif.
+
 **L'installeur annoncait un coffre indisponible qu'il venait de creer.** La
 configuration est mise en cache au premier appel ; l'installeur la lit pour
 connaitre le pilote de base **avant** d'ecrire `config.local.php`, donc le
@@ -278,7 +288,7 @@ C'est ce controle-la qui a leve le probleme, pas une relecture du code.
 
 ## 9. Ce qu'il me faut de ta part
 
-1. **Les identifiants MySQL de production.** Les 149 controles ont tourne
+1. **Les identifiants MySQL de production.** Les 151 controles ont tourne
    sur SQLite ; je relance la suite sur MySQL avant de declarer ce chemin.
 2. **Le nom de domaine du portail** et celui des offres d'emploi
    (`exportrev.com` ou `carrieres.exportrev.com`).

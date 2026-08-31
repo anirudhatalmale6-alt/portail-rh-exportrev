@@ -185,6 +185,10 @@ function ouvrir_session(int $utilisateur_id): string
             'samesite' => 'Lax',
         ]);
     }
+    // $_COOKIE n'est pas repeuple dans la meme requete : sans cette ligne,
+    // l'audit de la connexion serait attribue au « systeme » au lieu de la
+    // personne qui vient d'entrer.
+    acteur_audit($utilisateur_id);
     return $jeton;
 }
 

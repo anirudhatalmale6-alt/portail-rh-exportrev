@@ -774,6 +774,19 @@ r = s_rh.get(BASE + "/admin/journal")
 verif("la RH accede au journal d'audit", r.status_code == 200)
 verif("le journal contient des entrees", "journal_audit" in r.text or "<tbody>" in r.text)
 
+# La ligne la plus utile d'un journal de connexions est « qui ». A la
+# connexion, le cookie vient d'etre pose et $_COOKIE n'est pas repeuple dans
+# la meme requete : sans precaution, toutes les connexions s'inscrivent au
+# nom du « systeme ». C'est ce que montrait une capture d'ecran du journal.
+r = s_rh.get(BASE + "/admin/journal?action=connexion.reussie")
+lignes = re.findall(r'<td>(?:<span class="gris">)?([^<]{2,60})(?:</span>)?</td>\s*<td><code>connexion\.reussie',
+                    r.text)
+verif("le journal enregistre au moins une connexion",
+      "connexion.reussie" in r.text)
+verif("les connexions sont attribuees a une personne, pas au « systeme »",
+      lignes and all("systeme" not in l for l in lignes),
+      ", ".join(sorted(set(lignes))[:4]))
+
 # La matrice des roles est reservee a l'administrateur systeme.
 verif("la RH n'accede pas a la matrice des roles",
       s_rh.get(BASE + "/admin/roles").status_code == 403,

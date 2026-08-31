@@ -247,11 +247,27 @@ const CHAMPS_OPAQUES = [
     'mot_de_passe', 'jeton', 'jeton_examen', 'sel_session', 'cle_coffre',
 ];
 
+/**
+ * Qui agit, quand la session n'est pas encore lisible.
+ *
+ * A la connexion, ouvrir_session() pose un cookie — mais $_COOKIE n'est pas
+ * repeuple dans la MEME requete. utilisateur() rend donc null, et la ligne
+ * d'audit la plus utile de tout le journal, « untel s'est connecte »,
+ * s'ecrivait « systeme ». Vu sur une capture d'ecran du journal, pas dans le
+ * code : la colonne QUI disait « systeme » sur toutes les connexions.
+ */
+function acteur_audit(?int $id = null): ?int
+{
+    if ($id !== null) $GLOBALS['rh_acteur'] = $id;
+    return $GLOBALS['rh_acteur'] ?? null;
+}
+
 function audit(string $action, string $objet = '', ?int $objet_id = null,
                array $changements = [], array $detail = []): void
 {
     try {
         $uid = fonction_existe_utilisateur() ? (utilisateur()['id'] ?? null) : null;
+        $uid = $uid ?? acteur_audit();
         if (!$changements) {
             insere('journal_audit', [
                 'utilisateur_id' => $uid, 'action' => $action, 'objet' => $objet,
